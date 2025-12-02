@@ -19,7 +19,7 @@ jobs:
         sudo apt install -y \
           unzip cmake ninja-build g++ make git \
           libfmt-dev libpugixml-dev rapidjson-dev \
-          zip curl wget zlib1g-dev
+          zip curl wget zlib1g-dev libgmp-dev libgmp10 libgmp3-dev
         
     - name: Clone Kodi source code
       run: |
