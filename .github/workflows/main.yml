@@ -21,8 +21,7 @@ jobs:
           libfmt-dev libpugixml-dev rapidjson-dev \
           zip curl wget zlib1g-dev \
           libgmp-dev libgmp10 libgmp3-dev \
-          libnettle-dev libhogweed-dev \
-          pkg-config autoconf automake libtool
+          nettle-dev libnettle8 libhogweed6  # 修正的包名
         
     - name: Clone Kodi source code
       run: |
