@@ -43,7 +43,7 @@ jobs:
           -DENABLE_INTERNAL_GMP=OFF \
           -DENABLE_INTERNAL_NETTLE=OFF \
           -DENABLE_INTERNAL_ZVBI=OFF \
-          ../xbmc/cmake/addons \
+          ../xbmc/cmake/addons
                 
         # 编译
         make
