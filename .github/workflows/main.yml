@@ -27,26 +27,26 @@ jobs:
         
     - name: Clone InputStream FFmpegDirect addon
       run: |
-        git clone --depth 1 --branch Omega https://github.com/xbmc/inputstream.ffmpegdirect.git  
-        
+        mkdir -p addons
+        git clone --depth 1 --branch Omega https://github.com/xbmc/inputstream.ffmpegdirect.git addons/inputstream.ffmpegdirect
+    
     - name: Build the addon
       run: |
-        cd inputstream.ffmpegdirect
+        cd addons/inputstream.ffmpegdirect
         mkdir -p build && cd build
-
-        # 关键：所有 -DENABLE_INTERNAL_XXX=OFF 必须写在源码路径之前！
-        cmake ../../xbmc/cmake/addons \
+    
+        cmake ../../../xbmc/cmake/addons \
           -DADDONS_TO_BUILD=inputstream.ffmpegdirect \
-          -DADDON_SRC_PREFIX=../.. \
-          -DCMAKE_INSTALL_PREFIX=../../xbmc/addons \
+          -DADDON_SRC_PREFIX=../../addons \
+          -DCMAKE_INSTALL_PREFIX=../../addons \
           -DPACKAGE_ZIP=1 \
           -DCMAKE_BUILD_TYPE=Release \
           -DENABLE_INTERNAL_GMP=OFF \
           -DENABLE_INTERNAL_NETTLE=OFF \
           -DENABLE_INTERNAL_ZVBI=OFF
-
-        make -j$(nproc) || true
-        make -j$(nproc) 
+    
+        make -j$(nproc)
+        make install
         
     - name: 检查安装目录
       run: |
