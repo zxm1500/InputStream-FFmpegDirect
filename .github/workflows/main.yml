@@ -34,23 +34,23 @@ jobs:
         cd inputstream.ffmpegdirect
         mkdir -p build && cd build
         
-        # 使用相对路径配置构建
+    - name: Build the addon
+      run: |
+        cd inputstream.ffmpegdirect
+        mkdir -p build && cd build
+
         cmake \
           -DADDONS_TO_BUILD=inputstream.ffmpegdirect \
           -DADDON_SRC_PREFIX=../.. \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_INSTALL_PREFIX=../../xbmc/addons \
+          -DCMAKE_INSTALL_PREFIX=../../xbmc/addons \ 
           -DPACKAGE_ZIP=1 \
-          \
-          # 第一关：关闭 GMP、Nettle 等自己下载编译
+          -DCMAKE_BUILD_TYPE=Release \
           -DENABLE_INTERNAL_GMP=OFF \
           -DENABLE_INTERNAL_NETTLE=OFF \
-          -DENABLE_INTERNAL_CROSSGUID=OFF \
-          -DENABLE_INTERNAL_FSTRINGS=OFF \
-          \
-          # 第二关：关闭 libzvbi 自己编译（关键！）
           -DENABLE_INTERNAL_ZVBI=OFF \
-          ../../../xbmc/cmake/addons
+          ../xbmc/cmake/addons \
+
+        make -j$(nproc)
         
         # 编译
         make
