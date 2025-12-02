@@ -19,9 +19,7 @@ jobs:
         sudo apt install -y \
           unzip cmake ninja-build g++ make git \
           libfmt-dev libpugixml-dev rapidjson-dev \
-          zip curl wget zlib1g-dev \
-          libgmp-dev libgmp10 libgmp3-dev \
-          nettle-dev libnettle8 libhogweed6  # 修正的包名
+          zip curl wget zlib1g-dev
         
     - name: Clone Kodi source code
       run: |
@@ -31,121 +29,63 @@ jobs:
       run: |
         git clone --depth 1 --branch Omega https://github.com/xbmc/inputstream.ffmpegdirect.git
         
-    - name: 预下载依赖或修改配置
-      run: |
-        echo "=== 处理依赖问题 ==="
-        
-        # 方法1：尝试预下载 GMP
-        cd /tmp
-        wget --tries=3 --timeout=30 https://gmplib.org/download/gmp/gmp-6.3.0.tar.xz || \
-        wget --tries=3 --timeout=30 https://ftp.gnu.org/gnu/gmp/gmp-6.3.0.tar.xz || \
-        echo "GMP 下载失败，将依赖系统库"
-        
-        # 如果下载成功，放到缓存位置
-        if [ -f "gmp-6.3.0.tar.xz" ]; then
-          mkdir -p ~/.cache/kodi-build
-          mv gmp-6.3.0.tar.xz ~/.cache/kodi-build/
-        fi
-        
-    - name: Build the addon with system libraries
+    - name: Build the addon
       run: |
         cd inputstream.ffmpegdirect
-        
-        # 如果可能，修改 CMakeLists.txt 使用系统库
-        if [ -f "CMakeLists.txt" ]; then
-          echo "尝试修改配置使用系统库..."
-          sed -i 's/find_package(GMP REQUIRED)/#find_package(GMP REQUIRED)/' CMakeLists.txt 2>/dev/null || true
-          sed -i 's/GMP::gmp/Threads::Threads/' CMakeLists.txt 2>/dev/null || true
-        fi
-        
         mkdir -p build && cd build
         
-        # 尝试不同的配置
-        echo "尝试配置 1: 标准配置"
-        if ! cmake \
+        # 使用相对路径配置构建
+        cmake \
           -DADDONS_TO_BUILD=inputstream.ffmpegdirect \
           -DADDON_SRC_PREFIX=../.. \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=../../xbmc/addons \
           -DPACKAGE_ZIP=1 \
-          ../../xbmc/cmake/addons 2>&1 | tee cmake_output.log; then
-          
-          echo "配置 1 失败，尝试配置 2: 禁用外部下载"
-          
-          # 清理后重试
-          cd ..
-          rm -rf build
-          mkdir build && cd build
-          
-          cmake \
-            -DADDONS_TO_BUILD=inputstream.ffmpegdirect \
-            -DADDON_SRC_PREFIX=../.. \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=../../xbmc/addons \
-            -DPACKAGE_ZIP=1 \
-            -DDEPENDS_BUILD_GMP=OFF \
-            -DDEPENDS_BUILD_EXTERNAL_LIBS=OFF \
-            ../../xbmc/cmake/addons 2>&1 | tee cmake_output2.log
-        fi
+          ../../xbmc/cmake/addons
         
         # 编译
-        echo "开始编译..."
-        make -j$(nproc) VERBOSE=1 2>&1 | tee make_output.log || {
-          echo "编译失败，查看日志..."
-          tail -50 make_output.log
-          exit 1
-        }
+        make
         
-    - name: 检查构建结果
+    - name: 检查安装目录
       run: |
-        echo "=== 检查构建结果 ==="
+        echo "=== 检查安装目录 ==="
         
-        # 检查是否生成了 .so 文件
-        find inputstream.ffmpegdirect -name "*.so" -type f 2>/dev/null | while read file; do
-          echo "找到: $file"
-          ls -lh "$file"
-        done
-        
-        # 检查安装目录
+        # 检查 xbmc/addons/inputstream.ffmpegdirect 目录
         if [ -d "xbmc/addons/inputstream.ffmpegdirect" ]; then
-          echo "✅ 安装目录存在"
+          echo "✅ 找到安装目录: xbmc/addons/inputstream.ffmpegdirect"
+          echo "目录内容:"
           ls -la xbmc/addons/inputstream.ffmpegdirect/
+          
+          echo ""
+          echo "文件详情:"
+          find xbmc/addons/inputstream.ffmpegdirect -type f -name "*" | while read file; do
+            echo "- $file ($(ls -lh "$file" | awk '{print $5}'))"
+          done
         else
-          echo "⚠️  安装目录不存在，尝试手动复制"
-          
-          # 手动复制文件
-          mkdir -p xbmc/addons/inputstream.ffmpegdirect
-          find inputstream.ffmpegdirect -name "*.so" -type f -exec cp {} xbmc/addons/inputstream.ffmpegdirect/ \;
-          
-          # 复制其他文件
-          if [ -d "inputstream.ffmpegdirect/addon" ]; then
-            cp -r inputstream.ffmpegdirect/addon/* xbmc/addons/inputstream.ffmpegdirect/
-          fi
+          echo "❌ 未找到安装目录"
+          exit 1
         fi
         
     - name: 从安装目录创建 ZIP 包
       run: |
         echo "=== 从安装目录创建 ZIP 包 ==="
         
-        if [ ! -d "xbmc/addons/inputstream.ffmpegdirect" ]; then
-          echo "❌ 安装目录不存在"
-          exit 1
-        fi
-        
-        # 进入安装目录
-        cd xbmc/addons/inputstream.ffmpegdirect
-        
-        # 确保有无版本号的 .so 文件
-        if ls *.so.* 2>/dev/null | head -1; then
-          VERSIONED_SO=$(ls *.so.* | head -1)
-          if [ ! -f "inputstream.ffmpegdirect.so" ]; then
+        # 检查是否缺少 inputstream.ffmpegdirect.so（无版本号）
+        if [ ! -f "xbmc/addons/inputstream.ffmpegdirect/inputstream.ffmpegdirect.so" ]; then
+          echo "创建符号链接..."
+          cd xbmc/addons/inputstream.ffmpegdirect
+          
+          # 查找带版本号的 .so 文件
+          VERSIONED_SO=$(ls inputstream.ffmpegdirect.so.* 2>/dev/null | head -1)
+          if [ -n "$VERSIONED_SO" ]; then
             echo "创建链接: $VERSIONED_SO -> inputstream.ffmpegdirect.so"
             ln -sf "$VERSIONED_SO" inputstream.ffmpegdirect.so
           fi
+          cd ../../..
         fi
         
-        # 返回到工作目录并打包
-        cd ../../..
+        # 创建 ZIP 包
+        echo "创建 ZIP 包..."
         cd xbmc/addons
         zip -r "../../inputstream.ffmpegdirect.zip" inputstream.ffmpegdirect/
         cd ../..
@@ -153,10 +93,107 @@ jobs:
         echo "✅ 创建的 ZIP 包:"
         ls -lh inputstream.ffmpegdirect.zip
         
+        # 设置环境变量
+        echo "ZIP_FILE=inputstream.ffmpegdirect.zip" >> $GITHUB_ENV
+        
+    - name: 验证 ZIP 文件
+      run: |
+        echo "=== 验证 ZIP 文件 ==="
+        
+        if [ -f "${{ env.ZIP_FILE }}" ]; then
+          echo "✅ ZIP 文件: ${{ env.ZIP_FILE }}"
+          echo "大小: $(ls -lh "${{ env.ZIP_FILE }}" | awk '{print $5}')"
+          
+          echo ""
+          echo "ZIP 文件内容:"
+          unzip -l "${{ env.ZIP_FILE }}"
+          
+          echo ""
+          echo "检查关键文件:"
+          if unzip -l "${{ env.ZIP_FILE }}" | grep -q "addon.xml"; then
+            echo "✅ 包含 addon.xml"
+            echo ""
+            echo "addon.xml 内容:"
+            unzip -p "${{ env.ZIP_FILE }}" inputstream.ffmpegdirect/addon.xml | head -20
+          else
+            echo "❌ 缺少 addon.xml"
+          fi
+          
+          echo ""
+          if unzip -l "${{ env.ZIP_FILE }}" | grep -q "inputstream.ffmpegdirect.so"; then
+            echo "✅ 包含 inputstream.ffmpegdirect.so"
+          else
+            echo "⚠️ 注意: 可能只有带版本号的 .so 文件"
+            unzip -l "${{ env.ZIP_FILE }}" | grep "\.so" || true
+          fi
+        else
+          echo "❌ 错误：未找到 ZIP 文件"
+          exit 1
+        fi
+        
+    - name: 创建兼容性 ZIP（如果需要）
+      run: |
+        echo "=== 创建兼容性 ZIP ==="
+        
+        # 检查原始 ZIP 是否包含无版本号的 .so 文件
+        if ! unzip -l "${{ env.ZIP_FILE }}" | grep -q "inputstream.ffmpegdirect.so[^.]"; then
+          echo "创建包含无版本号 .so 文件的兼容 ZIP..."
+          
+          # 创建临时目录
+          mkdir -p temp_extract
+          unzip "${{ env.ZIP_FILE }}" -d temp_extract/
+          
+          # 进入提取的目录
+          cd temp_extract/inputstream.ffmpegdirect
+          
+          # 查找带版本号的 .so 文件
+          VERSIONED_SO=$(ls inputstream.ffmpegdirect.so.* 2>/dev/null | head -1)
+          if [ -n "$VERSIONED_SO" ]; then
+            echo "创建兼容链接: $VERSIONED_SO -> inputstream.ffmpegdirect.so"
+            cp "$VERSIONED_SO" inputstream.ffmpegdirect.so
+          fi
+          
+          # 返回并创建新的 ZIP
+          cd ../..
+          zip -r "inputstream.ffmpegdirect-compatible.zip" temp_extract/inputstream.ffmpegdirect/
+          
+          echo "✅ 创建的兼容 ZIP:"
+          ls -lh inputstream.ffmpegdirect-compatible.zip
+          
+          # 清理
+          rm -rf temp_extract
+          
+          echo "COMPATIBLE_ZIP=inputstream.ffmpegdirect-compatible.zip" >> $GITHUB_ENV
+        else
+          echo "原始 ZIP 已经包含无版本号的 .so 文件"
+        fi
+        
     - name: 上传产物
       uses: actions/upload-artifact@v4
       with:
         name: inputstream-ffmpegdirect-addon
         path: |
-          inputstream.ffmpegdirect.zip
+          inputstream.ffmpegdirect*.zip
         retention-days: 30
+        
+    - name: 显示构建摘要
+      run: |
+        echo "=== 构建完成 ==="
+        echo ""
+        echo "生成的文件:"
+        
+        # 列出所有 ZIP 文件
+        for zipfile in inputstream.ffmpegdirect*.zip; do
+          if [ -f "$zipfile" ]; then
+            echo "- $zipfile ($(ls -lh "$zipfile" | awk '{print $5}'))"
+            echo "  内容摘要:"
+            unzip -l "$zipfile" | grep -E "(addon\.xml|\.so)" | head -5
+          fi
+        done
+        
+        echo ""
+        echo "安装说明:"
+        echo "1. 下载 inputstream.ffmpegdirect.zip"
+        echo "2. 复制到 Kodi 的 addons 目录:"
+        echo "   cp inputstream.ffmpegdirect.zip ~/.kodi/addons/"
+        echo "3. Kodi 会自动解压并安装"
