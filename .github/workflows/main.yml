@@ -27,12 +27,7 @@ jobs:
         
     - name: Clone InputStream FFmpegDirect addon
       run: |
-        git clone --depth 1 --branch Omega https://github.com/xbmc/inputstream.ffmpegdirect.git
-        
-    - name: Build the addon
-      run: |
-        cd inputstream.ffmpegdirect
-        mkdir -p build && cd build
+        git clone --depth 1 --branch Omega https://github.com/xbmc/inputstream.ffmpegdirect.git  
         
     - name: Build the addon
       run: |
@@ -49,9 +44,7 @@ jobs:
           -DENABLE_INTERNAL_NETTLE=OFF \
           -DENABLE_INTERNAL_ZVBI=OFF \
           ../xbmc/cmake/addons \
-
-        make -j$(nproc)
-        
+                
         # 编译
         make
         
