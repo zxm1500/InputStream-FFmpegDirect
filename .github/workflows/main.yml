@@ -19,7 +19,7 @@ jobs:
         sudo apt install -y \
           unzip cmake ninja-build g++ make git \
           libfmt-dev libpugixml-dev rapidjson-dev \
-          zip curl wget zlib1g-dev libzvbi-dev
+          zip curl wget zlib1g-dev libzvbi-dev libgmp-dev libgmp10 libgmp3-dev 
         
     - name: Clone Kodi source code
       run: |
@@ -41,6 +41,14 @@ jobs:
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=../../xbmc/addons \
           -DPACKAGE_ZIP=1 \
+          \
+          # 第一关：关闭 GMP、Nettle 等自己下载编译
+          -DENABLE_INTERNAL_GMP=OFF \
+          -DENABLE_INTERNAL_NETTLE=OFF \
+          -DENABLE_INTERNAL_CROSSGUID=OFF \
+          -DENABLE_INTERNAL_FSTRINGS=OFF \
+          \
+          # 第二关：关闭 libzvbi 自己编译（关键！）
           -DENABLE_INTERNAL_ZVBI=OFF \
           ../../xbmc/cmake/addons
         
