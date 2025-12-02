@@ -50,7 +50,7 @@ jobs:
           \
           # 第二关：关闭 libzvbi 自己编译（关键！）
           -DENABLE_INTERNAL_ZVBI=OFF \
-          ../../xbmc/cmake/addons
+          ../../../xbmc/cmake/addons
         
         # 编译
         make
