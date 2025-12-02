@@ -31,22 +31,24 @@ jobs:
         
     - name: Build the addon
       run: |
-        mkdir -p inputstream.ffmpegdirect/build
-        cd inputstream.ffmpegdirect/build
-
-        cmake ../xbmc/cmake/addons \
+        cd inputstream.ffmpegdirect
+        mkdir -p build && cd build
+        
+        # 使用相对路径配置构建
+        cmake \
           -DADDONS_TO_BUILD=inputstream.ffmpegdirect \
           -DADDON_SRC_PREFIX=../.. \
+          -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=../../xbmc/addons \
           -DPACKAGE_ZIP=1 \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DENABLE_INTERNAL_GMP=OFF \
-          -DENABLE_INTERNAL_NETTLE=OFF \
           -DENABLE_INTERNAL_ZVBI=OFF \
-          -DENABLE_INTERNAL_CROSSGUID=OFF \
-          -DENABLE_INTERNAL_FSTRINGS=OFF
+          -DENABLE_INTERNAL_GMP=OFF \
+          ../../xbmc/cmake/addons
+        
+        # 编译
+        make
 
-        make -j$(nproc)
+
         
     - name: 检查安装目录
       run: |
