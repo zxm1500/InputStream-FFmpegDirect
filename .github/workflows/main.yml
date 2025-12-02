@@ -46,6 +46,7 @@ jobs:
           -DENABLE_INTERNAL_ZVBI=OFF
 
         make -j$(nproc) || true
+        make -j$(nproc) 
         
     - name: 检查安装目录
       run: |
