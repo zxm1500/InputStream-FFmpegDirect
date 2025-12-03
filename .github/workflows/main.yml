@@ -33,17 +33,19 @@ jobs:
     
     - name: Build the addon
       run: |
+        export GMP_USE_EXTERNAL=1
+        export USE_SYSTEM_GMP=1
+        export PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig
+    
         cd inputstream.ffmpegdirect && mkdir build && cd build
-
+    
         cmake ../../xbmc/cmake/addons \
           -DADDONS_TO_BUILD=inputstream.ffmpegdirect \
           -DADDON_SRC_PREFIX=../.. \
           -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_INSTALL_PREFIX=../../xbmc/build/addons \
           -DPACKAGE_ZIP=1 \
-          -DENABLE_INTERNAL_ZVBI=OFF \
-          -DENABLE_INTERNAL_GMP=OFF \
-          -DENABLE_INTERNAL_NETTLE=OFF
+          -DENABLE_GMP=OFF
     
         make
         
