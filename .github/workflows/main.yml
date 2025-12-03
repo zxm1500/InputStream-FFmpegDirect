@@ -39,7 +39,7 @@ jobs:
           -DADDON_SRC_PREFIX=../.. \
           -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_INSTALL_PREFIX=../../xbmc/build/addons \
-          -DPACKAGE_ZIP=1
+          -DPACKAGE_ZIP=1 \
           -DENABLE_INTERNAL_ZVBI=OFF \
           -DENABLE_INTERNAL_GMP=OFF \
           -DENABLE_INTERNAL_NETTLE=OFF
