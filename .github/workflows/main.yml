@@ -20,7 +20,7 @@ jobs:
           unzip cmake ninja-build g++ make git \
           libfmt-dev libpugixml-dev rapidjson-dev \
           zip curl wget zlib1g-dev libzvbi-dev libgmp-dev libgmp10 libgmp3-dev nettle-dev \
-          autopoint gettext
+          autopoint gettext nasm yasm
         
     - name: Clone Kodi source code
       run: |
