@@ -1,11 +1,7 @@
 name: Build inputstream.ffmpegdirect (Ubuntu 24.04)
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-      - master
+  workflow_dispatch: # 允许手动触发
 
 jobs:
   build:
