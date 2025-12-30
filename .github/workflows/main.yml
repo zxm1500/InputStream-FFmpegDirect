@@ -54,7 +54,7 @@ jobs:
 
       - name: Clone inputstream.ffmpegdirect
         run: |
-          git clone --branch omega--depth 1 https://github.com/xbmc/inputstream.ffmpegdirect.git
+          git clone --branch omega --depth 1 https://github.com/xbmc/inputstream.ffmpegdirect.git
 
       - name: Configure addon build
         run: |
