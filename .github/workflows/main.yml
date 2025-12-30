@@ -58,30 +58,33 @@ jobs:
 
       - name: Configure addon build
         run: |
-          cd inputstream.ffmpegdirect
-          mkdir -p build
-          cd build
-
+          mkdir -p inputstream.ffmpegdirect/build
+          cd inputstream.ffmpegdirect/build
+  
           cmake \
             -DADDONS_TO_BUILD=inputstream.ffmpegdirect \
             -DADDON_SRC_PREFIX=../.. \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=../../xbmc/build/addons \
             -DPACKAGE_ZIP=1 \
+            -DCMAKE_INSTALL_PREFIX=../../xbmc/build/addons \
             ../../xbmc/cmake/addons
-
+  
       - name: Build addon
         run: |
           cd inputstream.ffmpegdirect/build
           make -j$(nproc)
+  
+      - name: Package addon zip
+        run: |
+          cd inputstream.ffmpegdirect/build
           make package-inputstream.ffmpegdirect
-
-      - name: Collect inputstream.ffmpegdirect zip
+  
+      - name: Collect zip
         run: |
           mkdir -p output
-          find xbmc/build/addons/packages -name "inputstream.ffmpegdirect*.zip" -print
           find xbmc/build/addons/packages -name "inputstream.ffmpegdirect*.zip" -exec cp {} output/ \;
-
+          ls -lh output
+  
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
