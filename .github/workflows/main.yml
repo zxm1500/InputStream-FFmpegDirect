@@ -74,12 +74,13 @@ jobs:
         run: |
           cd inputstream.ffmpegdirect/build
           make -j$(nproc)
+          make package-inputstream.ffmpegdirect
 
-      - name: Collect zip package
+      - name: Collect inputstream.ffmpegdirect zip
         run: |
           mkdir -p output
-          find xbmc -type f -name "*.zip" -print
-          find xbmc -type f -name "*.zip" -exec cp {} output/ \;
+          find xbmc/build/addons/packages -name "inputstream.ffmpegdirect*.zip" -print
+          find xbmc/build/addons/packages -name "inputstream.ffmpegdirect*.zip" -exec cp {} output/ \;
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
