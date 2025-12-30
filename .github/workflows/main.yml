@@ -79,15 +79,14 @@ jobs:
           cd inputstream.ffmpegdirect/build
           make package-inputstream.ffmpegdirect
   
-      - name: Collect zip
+      - name: Collect zip (robust)
         run: |
           mkdir -p output
-          find inputstream.ffmpegdirect/build/addons/packages \
-            -name "inputstream.ffmpegdirect*.zip" -print
-          find inputstream.ffmpegdirect/build/addons/packages \
-            -name "inputstream.ffmpegdirect*.zip" -exec cp {} output/ \;
+          find . -type f -path "*/addons/packages/inputstream.ffmpegdirect*.zip" -print
+          find . -type f -path "*/addons/packages/inputstream.ffmpegdirect*.zip" \
+            -exec cp {} output/ \;
           ls -lh output
-  
+          
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
