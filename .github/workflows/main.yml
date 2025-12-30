@@ -82,7 +82,10 @@ jobs:
       - name: Collect zip
         run: |
           mkdir -p output
-          find xbmc/build/addons/packages -name "inputstream.ffmpegdirect*.zip" -exec cp {} output/ \;
+          find inputstream.ffmpegdirect/build/addons/packages \
+            -name "inputstream.ffmpegdirect*.zip" -print
+          find inputstream.ffmpegdirect/build/addons/packages \
+            -name "inputstream.ffmpegdirect*.zip" -exec cp {} output/ \;
           ls -lh output
   
       - name: Upload artifact
