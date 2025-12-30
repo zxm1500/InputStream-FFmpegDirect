@@ -74,19 +74,19 @@ jobs:
           cd inputstream.ffmpegdirect/build
           make -j$(nproc)
   
-      - name: Package addon zip
+      - name: Package addon manually
         run: |
-          cd inputstream.ffmpegdirect/build
-          make package-inputstream.ffmpegdirect
-  
-      - name: Collect zip (robust)
-        run: |
+          set -e
           mkdir -p output
-          find . -type f -path "*/addons/packages/inputstream.ffmpegdirect*.zip" -print
-          find . -type f -path "*/addons/packages/inputstream.ffmpegdirect*.zip" \
-            -exec cp {} output/ \;
-          ls -lh output
-          
+      
+          ADDON_DIR=$(find . -type d -path "*/addons/inputstream.ffmpegdirect" | head -n 1)
+          echo "Addon dir: $ADDON_DIR"
+      
+          cd "$ADDON_DIR/.."
+          zip -r "$GITHUB_WORKSPACE/output/inputstream.ffmpegdirect-ubuntu24.04.zip" \
+            inputstream.ffmpegdirect
+      
+                
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
